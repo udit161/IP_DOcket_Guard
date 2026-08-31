@@ -1,0 +1,42 @@
+{
+  "name": "coderudit-ip_docket_guard2",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Ip Docket Guard2 — a RocketRide app",
+  "license": "MIT",
+  "appManifest": {
+    "id": "coderudit.ip_Docket_guard2",
+    "publisher": "coderudit",
+    "name": "Ip Docket Guard2",
+    "description": "Ip Docket Guard2 — a RocketRide app",
+    "icon": "./icon.svg",
+    "readme": "./README.md",
+    "categories": [
+      "custom"
+    ],
+    "mode": "free",
+    "authenticated": false,
+    "projectId": "d325c2b5-9e75-40e5-916c-3e9a01519d52"
+  },
+  "scripts": {
+    "dev": "rsbuild dev",
+    "build": "tsc --noEmit && rsbuild build",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "rocketride": "file:../../.rocketride/client/rocketride.tgz",
+    "shell": "file:../../.rocketride/shell/shell.tgz"
+  },
+  "devDependencies": {
+    "@module-federation/rsbuild-plugin": "2.5.1",
+    "@rsbuild/core": "~2.0.11",
+    "@rsbuild/plugin-react": "~2.0.1",
+    "@types/node": "^20.19.41",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "react-refresh": "^0.14.2",
+    "typescript": "^5.3.0"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug Ip Docket Guard",
+      "type": "msedge",
+      "request": "launch",
+      "url": "https://staging.rocketride.ai:443/?appid=local.ip_Docket_Guard&rrdev=1",
+      "webRoot": "${workspaceFolder}/apps/ip_Docket_Guard-ui",
+      "sourceMapPathOverrides": {
+        "webpack:///./*": "${workspaceFolder}/apps/ip_Docket_Guard-ui/*",
+        "webpack:///*": "*"
+      }
+    },
+    {
+      "name": "Debug Ip Docket Guard2",
+      "type": "msedge",
+      "request": "launch",
+      "url": "https://staging.rocketride.ai:443/?appid=coderudit.ip_Docket_guard2&rrdev=1",
+      "webRoot": "${workspaceFolder}/apps/ip_Docket_guard2-ui",
+      "sourceMapPathOverrides": {
+        "webpack:///./*": "${workspaceFolder}/apps/ip_Docket_guard2-ui/*",
+        "webpack:///*": "*"
+      }
+    }
+  ]
+}
