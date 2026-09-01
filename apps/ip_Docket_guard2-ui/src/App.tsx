@@ -11,6 +11,7 @@
 import React, { useState, useMemo } from 'react';
 import type { ShellAppProps } from 'shell';
 import { AppLayout } from 'shell';
+import LoginPage from './LoginPage';
 
 // =============================================================================
 // TYPES
@@ -561,6 +562,11 @@ const StubView: React.FC<{ title: string; icon: string }> = ({ title, icon }) =>
 
 const App: React.FC<ShellAppProps> = () => {
   const [activeNav, setActiveNav] = useState<NavSection>('dashboard');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  if (!isAuthenticated) {
+    return <LoginPage onLogin={() => setIsAuthenticated(true)} />;
+  }
 
   return (
     <AppLayout sidebar={<SidebarNav active={activeNav} onNav={setActiveNav} />} showStatus>
