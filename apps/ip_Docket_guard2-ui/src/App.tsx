@@ -32,7 +32,7 @@ interface Patent {
 type SortField = 'renewalDate' | 'businessValue' | 'patentId' | 'clientName';
 type SortDir = 'asc' | 'desc';
 type FilterUrgency = 'all' | 'critical' | 'warning' | 'safe';
-type NavSection = 'dashboard' | 'docket' | 'clients' | 'reports';
+type NavSection = 'welcome' | 'login' | 'dashboard' | 'docket' | 'clients' | 'reports';
 
 // =============================================================================
 // MOCK DATA
@@ -306,8 +306,10 @@ const DocketTable: React.FC<{ patents: Patent[] }> = ({ patents }) => {
 // SIDEBAR NAV
 // =============================================================================
 
-const SidebarNav: React.FC<{ active: NavSection; onNav: (s: NavSection) => void }> = ({ active, onNav }) => {
+const SidebarNav: React.FC<{ active: NavSection; onNav: (s: NavSection) => void; onLogout: () => void }> = ({ active, onNav, onLogout }) => {
   const items: Array<{ key: NavSection; icon: string; label: string }> = [
+    { key: 'welcome',   icon: '✨', label: 'Welcome Page' },
+    { key: 'login',     icon: '🔑', label: 'Login / Sign Up' },
     { key: 'dashboard', icon: '⬛', label: 'Dashboard' },
     { key: 'docket',    icon: '📋', label: 'Docket'    },
     { key: 'clients',   icon: '🏢', label: 'Clients'   },
@@ -363,6 +365,28 @@ const SidebarNav: React.FC<{ active: NavSection; onNav: (s: NavSection) => void 
           </div>
         ))}
       </div>
+
+      {/* Logout button */}
+      <button
+        onClick={onLogout}
+        style={{
+          margin: '16px 6px 0',
+          padding: '8px 12px',
+          borderRadius: 8,
+          border: `1px solid ${C.border}`,
+          background: C.surfaceAlt,
+          color: C.textSecondary,
+          fontSize: 12,
+          fontWeight: 600,
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          transition: 'all 0.15s',
+        }}
+      >
+        🚪 Log Out / Welcome
+      </button>
     </div>
   );
 };
@@ -565,20 +589,30 @@ type AppPage = 'welcome' | 'login' | 'signup' | 'dashboard';
 
 const App: React.FC<ShellAppProps> = () => {
   const [page, setPage] = useState<AppPage>('welcome');
-  const [activeNav, setActiveNav] = useState<NavSection>('dashboard');
+  const [activeNav, setActiveNav] = useState<NavSection>('welcome');
 
-  // Determine sidebar: only show nav sidebar on the dashboard
-  const sidebar = page === 'dashboard'
-    ? <SidebarNav active={activeNav} onNav={setActiveNav} />
-    : undefined;
+  const handleNav = (nav: NavSection) => {
+    setActiveNav(nav);
+    if (nav === 'welcome') setPage('welcome');
+    else if (nav === 'login') setPage('login');
+    else setPage('dashboard');
+  };
+
+  const handleLogout = () => {
+    setPage('welcome');
+    setActiveNav('welcome');
+  };
 
   return (
-    <AppLayout sidebar={sidebar} showStatus>
+    <AppLayout
+      sidebar={<SidebarNav active={activeNav} onNav={handleNav} onLogout={handleLogout} />}
+      showStatus
+    >
       {/* ── Welcome / Intro page ── */}
       {page === 'welcome' && (
         <WelcomePage
-          onLogin={() => setPage('login')}
-          onSignup={() => setPage('signup')}
+          onLogin={() => { setPage('login'); setActiveNav('login'); }}
+          onSignup={() => { setPage('signup'); setActiveNav('login'); }}
         />
       )}
 
@@ -586,8 +620,8 @@ const App: React.FC<ShellAppProps> = () => {
       {(page === 'login' || page === 'signup') && (
         <LoginPage
           initialMode={page}
-          onLogin={() => setPage('dashboard')}
-          onBack={() => setPage('welcome')}
+          onLogin={() => { setPage('dashboard'); setActiveNav('dashboard'); }}
+          onBack={() => { setPage('welcome'); setActiveNav('welcome'); }}
         />
       )}
 
