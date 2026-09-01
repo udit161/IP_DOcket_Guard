@@ -570,16 +570,311 @@ const DocketView: React.FC = () => {
 };
 
 // =============================================================================
-// STUB VIEWS
+// CLIENT MANAGEMENT VIEW
 // =============================================================================
 
-const StubView: React.FC<{ title: string; icon: string }> = ({ title, icon }) => (
-  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 10, color: C.textMuted }}>
-    <div style={{ fontSize: 48 }}>{icon}</div>
-    <div style={{ fontSize: 17, fontWeight: 600, color: C.textPrimary }}>{title}</div>
-    <div style={{ fontSize: 13 }}>Coming soon in the next release.</div>
-  </div>
-);
+interface ClientInfo {
+  id: string;
+  name: string;
+  industry: string;
+  contactEmail: string;
+  accountManager: string;
+  tier: 'Enterprise' | 'Premium' | 'Standard';
+}
+
+const MOCK_CLIENTS: ClientInfo[] = [
+  { id: 'c1', name: 'Nexon Biotech Inc.', industry: 'Biotechnology', contactEmail: 'legal@nexonbiotech.com', accountManager: 'Sarah Jenkins', tier: 'Enterprise' },
+  { id: 'c2', name: 'AlphaCore Systems', industry: 'AI & Semiconductors', contactEmail: 'ip@alphacore.io', accountManager: 'David Chen', tier: 'Enterprise' },
+  { id: 'c3', name: 'Veltric Pharma', industry: 'Pharmaceuticals', contactEmail: 'patents@veltric.com', accountManager: 'Elena Rostova', tier: 'Enterprise' },
+  { id: 'c4', name: 'Orbis Dynamics', industry: 'Aerospace & Robotics', contactEmail: 'ip-dept@orbisdynamics.com', accountManager: 'Michael Vance', tier: 'Premium' },
+  { id: 'c5', name: 'Lumos Technologies', industry: 'Optics & Quantum', contactEmail: 'legal@lumostech.com', accountManager: 'David Chen', tier: 'Standard' },
+  { id: 'c6', name: 'Meridian Labs', industry: 'Medical Devices', contactEmail: 'docketing@meridianlabs.org', accountManager: 'Sarah Jenkins', tier: 'Enterprise' },
+  { id: 'c7', name: 'Solara Energy', industry: 'CleanTech & Solar', contactEmail: 'ip@solaraenergy.com', accountManager: 'Elena Rostova', tier: 'Premium' },
+];
+
+const ClientsView: React.FC = () => {
+  const [search, setSearch] = useState('');
+  const [industryFilter, setIndustryFilter] = useState<string>('all');
+
+  const clientStats = useMemo(() => {
+    return MOCK_CLIENTS.map(c => {
+      const patents = MOCK_PATENTS.filter(p => p.clientName === c.name);
+      const totalVal = patents.reduce((s, p) => s + p.businessValue, 0);
+      const criticalCount = patents.filter(p => getUrgency(p.renewalDate) === 'critical').length;
+      const warningCount = patents.filter(p => getUrgency(p.renewalDate) === 'warning').length;
+      return {
+        ...c,
+        patentsCount: patents.length,
+        totalValue: totalVal,
+        criticalCount,
+        warningCount,
+      };
+    });
+  }, []);
+
+  const filteredClients = useMemo(() => {
+    return clientStats.filter(c => {
+      const matchesSearch = c.name.toLowerCase().includes(search.toLowerCase()) ||
+                            c.industry.toLowerCase().includes(search.toLowerCase()) ||
+                            c.accountManager.toLowerCase().includes(search.toLowerCase());
+      const matchesIndustry = industryFilter === 'all' || c.industry === industryFilter;
+      return matchesSearch && matchesIndustry;
+    });
+  }, [clientStats, search, industryFilter]);
+
+  const industries = Array.from(new Set(MOCK_CLIENTS.map(c => c.industry)));
+
+  return (
+    <div style={{ padding: '28px', maxWidth: 1200, margin: '0 auto', overflowY: 'auto', height: '100%' }}>
+      {/* Page Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 14 }}>
+        <div>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: C.textPrimary, margin: 0 }}>🏢 Client Portfolio Management</h1>
+          <p style={{ fontSize: 13, color: C.textMuted, margin: '4px 0 0' }}>
+            Manage corporate client accounts, track IP portfolio valuation, and monitor renewal urgency.
+          </p>
+        </div>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button style={{ padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: `1px solid ${C.accent}`, background: C.accentGlow, color: C.accent }}>
+            + Add Client
+          </button>
+          <button style={{ padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: `1px solid ${C.border}`, background: C.surfaceAlt, color: C.textSecondary }}>
+            ⬇ Export Directory
+          </button>
+        </div>
+      </div>
+
+      {/* Top Metrics Row */}
+      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 24 }}>
+        <MetricCard label="Total Clients" value={MOCK_CLIENTS.length} sub="Corporate Accounts" icon="🏢" accent={C.accent} />
+        <MetricCard label="Total Valuation" value={formatCurrency(MOCK_PATENTS.reduce((s, p) => s + p.businessValue, 0))} sub="Across all clients" icon="💰" accent={C.safe} />
+        <MetricCard label="Clients At Risk" value={clientStats.filter(c => c.criticalCount > 0).length} sub="Has critical deadlines" icon="🚨" accent={C.critical} />
+        <MetricCard label="Avg Patents / Client" value={(MOCK_PATENTS.length / MOCK_CLIENTS.length).toFixed(1)} sub="Patents per organization" icon="📊" accent={C.warning} />
+      </div>
+
+      {/* Filters Toolbar */}
+      <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ position: 'relative', flex: '1 1 240px', minWidth: 200 }}>
+          <input
+            type="text"
+            placeholder="Search client, industry, manager…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            style={{
+              width: '100%', padding: '8px 12px 8px 34px',
+              background: C.surface, border: `1px solid ${C.border}`,
+              borderRadius: 8, color: C.textPrimary, fontSize: 13, outline: 'none', boxSizing: 'border-box',
+            }}
+          />
+          <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: C.textMuted, fontSize: 14 }}>🔍</span>
+        </div>
+        <select
+          value={industryFilter}
+          onChange={e => setIndustryFilter(e.target.value)}
+          style={{
+            padding: '8px 12px', background: C.surface, border: `1px solid ${C.border}`,
+            borderRadius: 8, color: C.textPrimary, fontSize: 13, outline: 'none', cursor: 'pointer',
+          }}
+        >
+          <option value="all">All Industries</option>
+          {industries.map(ind => <option key={ind} value={ind}>{ind}</option>)}
+        </select>
+      </div>
+
+      {/* Clients Cards Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 18 }}>
+        {filteredClients.map(c => (
+          <div key={c.id} style={{
+            background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14,
+            padding: 20, display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+            position: 'relative', overflow: 'hidden',
+          }}>
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: c.criticalCount > 0 ? C.critical : c.warningCount > 0 ? C.warning : C.safe }} />
+            
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+                <div>
+                  <h3 style={{ fontSize: 16, fontWeight: 700, color: C.textPrimary, margin: 0 }}>{c.name}</h3>
+                  <span style={{ fontSize: 11, color: C.accent, fontWeight: 600, background: C.accentGlow, padding: '2px 8px', borderRadius: 12, marginTop: 4, display: 'inline-block' }}>
+                    {c.industry}
+                  </span>
+                </div>
+                <Badge color={C.textSecondary} bg={C.surfaceAlt} border={C.border}>
+                  {c.tier}
+                </Badge>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, margin: '16px 0', background: C.surfaceAlt, padding: 12, borderRadius: 10 }}>
+                <div>
+                  <div style={{ fontSize: 11, color: C.textMuted, fontWeight: 600 }}>PATENTS</div>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: C.textPrimary }}>{c.patentsCount}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 11, color: C.textMuted, fontWeight: 600 }}>PORTFOLIO VALUE</div>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: C.textPrimary }}>{formatCurrency(c.totalValue)}</div>
+                </div>
+              </div>
+
+              <div style={{ fontSize: 12, color: C.textMuted, display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 16 }}>
+                <div>📧 <span style={{ color: C.textSecondary }}>{c.contactEmail}</span></div>
+                <div>👤 Manager: <span style={{ color: C.textSecondary }}>{c.accountManager}</span></div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 12, borderTop: `1px solid ${C.borderSubtle}` }}>
+              <div>
+                {c.criticalCount > 0 ? (
+                  <span style={{ fontSize: 11, fontWeight: 700, color: C.critical }}>🚨 {c.criticalCount} Critical Deadline</span>
+                ) : c.warningCount > 0 ? (
+                  <span style={{ fontSize: 11, fontWeight: 700, color: C.warning }}>⚠️ {c.warningCount} Renewal Soon</span>
+                ) : (
+                  <span style={{ fontSize: 11, fontWeight: 700, color: C.safe }}>✅ All Clear</span>
+                )}
+              </div>
+              <button
+                style={{ padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer', border: `1px solid ${C.border}`, background: C.surfaceAlt, color: C.accent }}
+              >
+                Manage Client →
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// =============================================================================
+// REPORTS & ANALYTICS VIEW
+// =============================================================================
+
+const ReportsView: React.FC = () => {
+  const [timeframe, setTimeframe] = useState<'Q1 2026' | 'YTD' | '1Y' | 'ALL'>('YTD');
+
+  const totalVal = MOCK_PATENTS.reduce((s, p) => s + p.businessValue, 0);
+  const criticalVal = MOCK_PATENTS.filter(p => getUrgency(p.renewalDate) === 'critical').reduce((s, p) => s + p.businessValue, 0);
+  const warningVal = MOCK_PATENTS.filter(p => getUrgency(p.renewalDate) === 'warning').reduce((s, p) => s + p.businessValue, 0);
+
+  const clientDistribution = useMemo(() => {
+    const map: Record<string, number> = {};
+    MOCK_PATENTS.forEach(p => {
+      map[p.clientName] = (map[p.clientName] || 0) + p.businessValue;
+    });
+    return Object.entries(map).sort((a, b) => b[1] - a[1]);
+  }, []);
+
+  return (
+    <div style={{ padding: '28px', maxWidth: 1200, margin: '0 auto', overflowY: 'auto', height: '100%' }}>
+      {/* Page Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 14 }}>
+        <div>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: C.textPrimary, margin: 0 }}>📊 Reports & Valuation Analytics</h1>
+          <p style={{ fontSize: 13, color: C.textMuted, margin: '4px 0 0' }}>
+            Comprehensive patent portfolio analytics, renewal risk forecasting, and financial breakdown.
+          </p>
+        </div>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          <div style={{ display: 'flex', background: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, padding: 2 }}>
+            {(['Q1 2026', 'YTD', '1Y', 'ALL'] as const).map(tf => (
+              <button
+                key={tf}
+                onClick={() => setTimeframe(tf)}
+                style={{
+                  padding: '6px 12px', border: 'none', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                  background: timeframe === tf ? C.accent : 'transparent',
+                  color: timeframe === tf ? '#fff' : C.textMuted,
+                }}
+              >
+                {tf}
+              </button>
+            ))}
+          </div>
+          <button style={{ padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: `1px solid ${C.border}`, background: C.surfaceAlt, color: C.textPrimary }}>
+            📥 Download PDF Report
+          </button>
+        </div>
+      </div>
+
+      {/* Metrics Highlights */}
+      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 24 }}>
+        <MetricCard label="Total Portfolio Value" value={formatCurrency(totalVal)} sub="12 Monitored Patents" icon="💼" accent={C.accent} />
+        <MetricCard label="Capital at Risk (<30d)" value={formatCurrency(criticalVal)} sub={`${Math.round((criticalVal / totalVal) * 100)}% of total value`} icon="🚨" accent={C.critical} />
+        <MetricCard label="Warning Capital (<90d)" value={formatCurrency(warningVal)} sub={`${Math.round((warningVal / totalVal) * 100)}% of total value`} icon="⚠️" accent={C.warning} />
+        <MetricCard label="Avg Patent Value" value={formatCurrency(totalVal / MOCK_PATENTS.length)} sub="Estimated IP Asset Value" icon="📈" accent={C.safe} />
+      </div>
+
+      {/* Executive Summary Card */}
+      <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14, padding: 24, marginBottom: 24 }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: C.accent, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+          💡 AI Docket Intelligence Summary
+        </div>
+        <p style={{ fontSize: 14, color: C.textPrimary, lineHeight: 1.6, margin: 0 }}>
+          Your portfolio currently holds <strong>{MOCK_PATENTS.length} active IP assets</strong> valued at <strong>{formatCurrency(totalVal)}</strong>. 
+          There are <strong>4 critical renewals</strong> approaching within the next 30 days representing <strong>{formatCurrency(criticalVal)}</strong> in asset valuation. Immediate renewal processing is recommended for <em>AlphaCore Systems (EP-3,456,789)</em> and <em>Nexon Biotech Inc. (US-9,876,543)</em> to mitigate statutory forfeiture risk.
+        </p>
+      </div>
+
+      {/* Two Column Visual Breakdown */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: 20 }}>
+        {/* Client Valuation Distribution */}
+        <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14, padding: 20 }}>
+          <h3 style={{ fontSize: 15, fontWeight: 700, color: C.textPrimary, margin: '0 0 16px 0' }}>
+            🏢 Valuation Breakdown by Client
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            {clientDistribution.map(([client, val]) => {
+              const pct = Math.round((val / totalVal) * 100);
+              return (
+                <div key={client}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 6 }}>
+                    <span style={{ color: C.textPrimary, fontWeight: 600 }}>{client}</span>
+                    <span style={{ color: C.textSecondary }}>{formatCurrency(val)} ({pct}%)</span>
+                  </div>
+                  <div style={{ height: 8, background: C.surfaceAlt, borderRadius: 4, overflow: 'hidden' }}>
+                    <div style={{ width: `${pct}%`, height: '100%', background: `linear-gradient(90deg, ${C.accent}, #7c3aed)`, borderRadius: 4 }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Renewal Urgency Matrix */}
+        <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14, padding: 20 }}>
+          <h3 style={{ fontSize: 15, fontWeight: 700, color: C.textPrimary, margin: '0 0 16px 0' }}>
+            ⏳ Renewal Schedule & Value Distribution
+          </h3>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ padding: 14, background: C.criticalBg, border: `1px solid ${C.criticalBorder}`, borderRadius: 10 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                <span style={{ fontWeight: 700, color: C.critical, fontSize: 14 }}>🔴 Critical (&lt; 30 Days)</span>
+                <span style={{ fontWeight: 700, color: C.critical, fontSize: 14 }}>{formatCurrency(criticalVal)}</span>
+              </div>
+              <div style={{ fontSize: 12, color: C.textMuted }}>4 Patents require immediate fee payment</div>
+            </div>
+
+            <div style={{ padding: 14, background: C.warningBg, border: `1px solid ${C.warningBorder}`, borderRadius: 10 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                <span style={{ fontWeight: 700, color: C.warning, fontSize: 14 }}>🟡 Warning (30-90 Days)</span>
+                <span style={{ fontWeight: 700, color: C.warning, fontSize: 14 }}>{formatCurrency(warningVal)}</span>
+              </div>
+              <div style={{ fontSize: 12, color: C.textMuted }}>4 Patents scheduled for review</div>
+            </div>
+
+            <div style={{ padding: 14, background: C.safeBg, border: `1px solid ${C.safeBorder}`, borderRadius: 10 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                <span style={{ fontWeight: 700, color: C.safe, fontSize: 14 }}>🟢 Safe (&gt; 90 Days)</span>
+                <span style={{ fontWeight: 700, color: C.safe, fontSize: 14 }}>{formatCurrency(totalVal - criticalVal - warningVal)}</span>
+              </div>
+              <div style={{ fontSize: 12, color: C.textMuted }}>4 Patents in good standing</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // =============================================================================
 // ROOT APP
@@ -631,12 +926,12 @@ const App: React.FC<ShellAppProps> = () => {
           height: '100%', display: 'flex', flexDirection: 'column',
           background: C.bg, color: C.textPrimary,
           fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif',
-          overflowY: activeNav === 'dashboard' ? 'auto' : 'hidden',
+          overflowY: activeNav === 'dashboard' || activeNav === 'clients' || activeNav === 'reports' ? 'auto' : 'hidden',
         }}>
           {activeNav === 'dashboard' && <DashboardView onGoToDocket={() => setActiveNav('docket')} />}
           {activeNav === 'docket'    && <DocketView />}
-          {activeNav === 'clients'   && <StubView title="Client Management" icon="🏢" />}
-          {activeNav === 'reports'   && <StubView title="Reports & Analytics" icon="📊" />}
+          {activeNav === 'clients'   && <ClientsView />}
+          {activeNav === 'reports'   && <ReportsView />}
         </div>
       )}
     </AppLayout>
