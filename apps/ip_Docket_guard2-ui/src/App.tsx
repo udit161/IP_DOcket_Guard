@@ -567,41 +567,44 @@ const App: React.FC<ShellAppProps> = () => {
   const [page, setPage] = useState<AppPage>('welcome');
   const [activeNav, setActiveNav] = useState<NavSection>('dashboard');
 
-  // ── Welcome / Intro page ──
-  if (page === 'welcome') {
-    return (
-      <WelcomePage
-        onLogin={() => setPage('login')}
-        onSignup={() => setPage('signup')}
-      />
-    );
-  }
+  // Determine sidebar: only show nav sidebar on the dashboard
+  const sidebar = page === 'dashboard'
+    ? <SidebarNav active={activeNav} onNav={setActiveNav} />
+    : undefined;
 
-  // ── Login / Signup page ──
-  if (page === 'login' || page === 'signup') {
-    return (
-      <LoginPage
-        initialMode={page}
-        onLogin={() => setPage('dashboard')}
-        onBack={() => setPage('welcome')}
-      />
-    );
-  }
-
-  // ── Authenticated Dashboard ──
   return (
-    <AppLayout sidebar={<SidebarNav active={activeNav} onNav={setActiveNav} />} showStatus>
-      <div style={{
-        height: '100%', display: 'flex', flexDirection: 'column',
-        background: C.bg, color: C.textPrimary,
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif',
-        overflowY: activeNav === 'dashboard' ? 'auto' : 'hidden',
-      }}>
-        {activeNav === 'dashboard' && <DashboardView onGoToDocket={() => setActiveNav('docket')} />}
-        {activeNav === 'docket'    && <DocketView />}
-        {activeNav === 'clients'   && <StubView title="Client Management" icon="🏢" />}
-        {activeNav === 'reports'   && <StubView title="Reports & Analytics" icon="📊" />}
-      </div>
+    <AppLayout sidebar={sidebar} showStatus>
+      {/* ── Welcome / Intro page ── */}
+      {page === 'welcome' && (
+        <WelcomePage
+          onLogin={() => setPage('login')}
+          onSignup={() => setPage('signup')}
+        />
+      )}
+
+      {/* ── Login / Signup page ── */}
+      {(page === 'login' || page === 'signup') && (
+        <LoginPage
+          initialMode={page}
+          onLogin={() => setPage('dashboard')}
+          onBack={() => setPage('welcome')}
+        />
+      )}
+
+      {/* ── Authenticated Dashboard ── */}
+      {page === 'dashboard' && (
+        <div style={{
+          height: '100%', display: 'flex', flexDirection: 'column',
+          background: C.bg, color: C.textPrimary,
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif',
+          overflowY: activeNav === 'dashboard' ? 'auto' : 'hidden',
+        }}>
+          {activeNav === 'dashboard' && <DashboardView onGoToDocket={() => setActiveNav('docket')} />}
+          {activeNav === 'docket'    && <DocketView />}
+          {activeNav === 'clients'   && <StubView title="Client Management" icon="🏢" />}
+          {activeNav === 'reports'   && <StubView title="Reports & Analytics" icon="📊" />}
+        </div>
+      )}
     </AppLayout>
   );
 };
