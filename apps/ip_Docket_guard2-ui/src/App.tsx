@@ -12,6 +12,7 @@ import React, { useState, useMemo } from 'react';
 import type { ShellAppProps } from 'shell';
 import { AppLayout } from 'shell';
 import LoginPage from './LoginPage';
+import WelcomePage from './WelcomePage';
 
 // =============================================================================
 // TYPES
@@ -560,14 +561,34 @@ const StubView: React.FC<{ title: string; icon: string }> = ({ title, icon }) =>
 // ROOT APP
 // =============================================================================
 
-const App: React.FC<ShellAppProps> = () => {
-  const [activeNav, setActiveNav] = useState<NavSection>('dashboard');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+type AppPage = 'welcome' | 'login' | 'signup' | 'dashboard';
 
-  if (!isAuthenticated) {
-    return <LoginPage onLogin={() => setIsAuthenticated(true)} />;
+const App: React.FC<ShellAppProps> = () => {
+  const [page, setPage] = useState<AppPage>('welcome');
+  const [activeNav, setActiveNav] = useState<NavSection>('dashboard');
+
+  // ── Welcome / Intro page ──
+  if (page === 'welcome') {
+    return (
+      <WelcomePage
+        onLogin={() => setPage('login')}
+        onSignup={() => setPage('signup')}
+      />
+    );
   }
 
+  // ── Login / Signup page ──
+  if (page === 'login' || page === 'signup') {
+    return (
+      <LoginPage
+        initialMode={page}
+        onLogin={() => setPage('dashboard')}
+        onBack={() => setPage('welcome')}
+      />
+    );
+  }
+
+  // ── Authenticated Dashboard ──
   return (
     <AppLayout sidebar={<SidebarNav active={activeNav} onNav={setActiveNav} />} showStatus>
       <div style={{

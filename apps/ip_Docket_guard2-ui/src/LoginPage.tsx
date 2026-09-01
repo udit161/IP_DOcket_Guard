@@ -3,10 +3,12 @@ import './LoginPage.css';
 
 interface LoginPageProps {
   onLogin: () => void;
+  onBack?: () => void;
+  initialMode?: 'login' | 'signup';
 }
 
-const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
-  const [isLogin, setIsLogin] = useState(true);
+const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onBack, initialMode = 'login' }) => {
+  const [isLogin, setIsLogin] = useState(initialMode === 'login');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,6 +27,20 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
 
       {/* Glassmorphic Login Card */}
       <div className="login-card">
+        {onBack && (
+          <button
+            onClick={onBack}
+            style={{
+              position: 'absolute', top: 20, left: 20, background: 'none',
+              border: 'none', color: '#8b949e', cursor: 'pointer', fontSize: 20,
+              transition: 'color 0.2s',
+            }}
+            onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
+            onMouseLeave={e => (e.currentTarget.style.color = '#8b949e')}
+          >
+            ←
+          </button>
+        )}
         <div className="brand-icon">⚖️</div>
         <h1 className="login-title">
           {isLogin ? 'Welcome back' : 'Create an account'}
